@@ -9,7 +9,6 @@
 
 <link rel="stylesheet" href="css/bootstrap.css">
 <link rel="stylesheet" href="css/bootstrapValidator.min.css">
-
 <script src="js/jquery-3.1.1.min.js"></script>
 <script src="js/bootstrap.min.js"></script>
 <script src="js/bootstrapValidator.min.js"></script>
@@ -117,46 +116,45 @@
                                 <input class="signup form-control" type="password" id="confirm_password" name="cnfrmpwd"
                                        placeholder="Confirm Password"><br>
                             </div>
-                            <button type="submit" class="btn btn-primary">Sign Up</button>
-                            <br>
-                            <div id="confirm" hidden class="alert alert-danger">User Exist</div>
-
+                            <input type="submit" class="btn btn-primary" value="Sign Up"></input>
+                            <br><br>
+                            <div id="confirm" hidden class="alert alert-danger">User name already exists !</div>
 
                             <?php
+
                             $fname = "";
                             $lname = "";
                             $username = "";
                             $email = "";
                             $password = "";
+                            $check = "";
                             if (isset($_POST['firstname']) && isset($_POST['lastname']) && isset($_POST['username']) && isset($_POST['email']) && isset($_POST['pwd']) && isset($_POST['cnfrmpwd'])) {
                                 $fname = $_POST['firstname'];
                                 $lname = $_POST['lastname'];
                                 $username = $_POST['username'];
                                 $email = $_POST['email'];
                                 $password = md5($_POST['cnfrmpwd']);
+                            }
 
-                                if ($fname != '' && $lname != '' && $username != '' && $email != '' && $password != '') {
+                            if ($fname != '' && $lname != '' && $username != '' && $email != '' && $password != '') {
+                                include ('database.php');
+                                $query = mysqli_query($connection, "SELECT * FROM login WHERE unamedb='$username'");
+                                $row = mysqli_fetch_assoc($query);
+                                $validuname = $row['unamedb'];
+
+                                if ($validuname != '') {
+                                    $check = 1;
+                                } else {
                                     $connection = mysqli_connect("localhost", "root", "", "roni");
                                     mysqli_select_db($connection, "login");
-                                    $validuname = mysqli_query($connection, "SELECT * FROM login WHERE unamedb='$username'");
-                                    $row = mysqli_fetch_assoc($validuname);
-                                    $vali = $row['unamedb'];
-
-                                    if ($vali != '') {
-                                        echo "<script type='text/javascript'>";
-                                        echo "$(document).ready(function () { $('#confirm').removeClass('hidden')});";
-                                        echo "</script>";
-
-
-                                    } else {
-                                        $connection = mysqli_connect("localhost", "root", "", "roni");
-                                        mysqli_select_db($connection, "login");
-                                        mysqli_query($connection, "INSERT INTO login VALUES ('$fname','$lname','$username','$email','$password')");
-                                    }
+                                    mysqli_query($connection, "INSERT INTO login VALUES ('$fname','$lname','$username','$email','$password')");
+                                    echo "<script type='text/javascript'>", "function_success();", "</script>";
                                 }
                             }
+
                             ?>
                         </form>
+
                     </div>
                 </div>
             </div>
@@ -167,24 +165,47 @@
 
 
 </body>
+
+
 <script type="text/javascript">
 
+
+    $("#uname").change(function () {
+        var usernamecheck = $("#uname").val();
+        $.post("username_check.php", {username: usernamecheck}, function (data) {
+
+            if (data == 1) {
+                $('#confirm').show(300).delay(2000).hide(500);
+            }
+        });
+
+    });
+
+
     $(document).ready(function () {
+        var submit_user_name = "<?php echo $check ?>";
+        if (submit_user_name == 1) {
+
+            $('#confirm').show(300).delay(2000).hide(500, function () {
+                window.history.back();
+
+            });
+
+
+        }
+        ;
+
+
         var validator = $("#signupform").bootstrapValidator({
-            feedbackIcons: {
-                valid: "glyphicon glyphicon-ok",
-                invalid: "glyphicon glyphicon-remove"
-            },
+
 
             fields: {
                 firstname: {
                     message: "First name is required ",
                     validators: {
                         notEmpty: {}
-                    },
-                    invalid: {
-                        message: "format error"
                     }
+
                 },
                 lastname: {
 
